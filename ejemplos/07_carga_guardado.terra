@@ -1,0 +1,5 @@
+# Corte 2: carga y guardado de datos tabulares
+fijo datos = cargar "datos/emisiones_ejemplo.csv"
+mostrar(datos)
+guardar datos como "salidas/copia_emisiones.csv"
+mostrar("tabla guardada en salidas/copia_emisiones.csv")

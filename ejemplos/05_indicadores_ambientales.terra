@@ -1,0 +1,34 @@
+# Caso de estudio: indicadores ambientales por pais
+
+fijo datos = cargar "datos/emisiones_ejemplo.csv" con separador ","
+
+fijo limpio = datos
+    |> seleccionar [pais, anio, co2, poblacion, energia_renovable]
+    |> filtrar donde co2 > 0.0
+    |> rellenar nulos en energia_renovable con 0.0
+    |> crear co2_per_capita = co2 / poblacion * 1000000.0
+
+fijo resumen = limpio
+    |> agrupar por [pais]
+    |> resumir emisiones = suma(co2),
+               promedio = media(co2_per_capita),
+               renovable = media(energia_renovable),
+               registros = contar()
+    |> ordenar por emisiones desc
+    |> limitar 10
+
+mostrar(resumen)
+
+graficar barras resumen
+    eje_x pais
+    eje_y emisiones
+    titulo "Emisiones totales de CO2 por pais"
+    guardar como "salidas/emisiones_pais.png"
+
+graficar lineas limpio
+    eje_x anio
+    eje_y co2
+    titulo "Evolucion anual de emisiones"
+    guardar como "salidas/evolucion_co2.png"
+
+guardar resumen como "salidas/resumen_paises.csv"

@@ -1,0 +1,19 @@
+# Variables y tipos basicos en Terra
+
+fijo PI = 3.14159
+var contador = 0
+
+fijo pais = "Colombia"
+fijo meta_cumplida = falso
+fijo sin_dato = nulo
+fijo anios = [2019, 2020, 2021, 2022, 2023]
+
+mostrar(pais)
+mostrar(PI)
+mostrar(meta_cumplida)
+mostrar(sin_dato)
+mostrar(anios)
+
+contador = contador + 1
+mostrar("Mediciones registradas:", contador)
+

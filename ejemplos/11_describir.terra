@@ -1,0 +1,10 @@
+# Corte 2: resumen descriptivo de variables numericas y categoricas
+fijo datos = cargar "datos/emisiones_ejemplo.csv"
+
+fijo resumen = describir(datos)
+mostrar(resumen)
+guardar resumen como "salidas/descripcion_emisiones.csv"
+
+# Tambien funciona sobre el resultado de una tuberia
+fijo recientes = datos |> filtrar donde anio >= 2021 |> seleccionar [pais, co2]
+mostrar(describir(recientes))

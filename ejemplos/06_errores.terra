@@ -1,0 +1,9 @@
+# Programa INVALIDO a proposito (prueba negativa)
+
+fijo 2x = 5
+
+si co2 > 10
+    mostrar("alto")
+fin
+
+mostrar("sin cerrar"

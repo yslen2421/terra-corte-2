@@ -1,0 +1,23 @@
+# Corte 2: preparacion de datos con tuberias
+fijo datos = cargar "datos/emisiones_ejemplo.csv"
+
+# Emisiones por habitante desde 2018, de mayor a menor
+fijo per_capita = datos
+    |> eliminar nulos
+    |> crear co2_per_capita = co2 * 1000000 / poblacion
+    |> filtrar donde anio >= 2018
+    |> seleccionar [pais, anio, co2, co2_per_capita]
+    |> ordenar por co2_per_capita desc
+
+mostrar(per_capita)
+guardar per_capita como "salidas/co2_per_capita.csv"
+
+# Tratamiento de nulos, renombrado, conversion y limite
+fijo preparada = datos
+    |> rellenar nulos en energia_renovable con 0.0
+    |> renombrar energia_renovable como renovable
+    |> convertir anio como texto
+    |> eliminar duplicados
+    |> limitar 5
+
+mostrar(preparada)

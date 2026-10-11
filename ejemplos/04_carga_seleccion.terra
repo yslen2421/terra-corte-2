@@ -1,0 +1,15 @@
+# Carga de un CSV y preparacion basica
+
+fijo datos = cargar "datos/emisiones_ejemplo.csv"
+
+fijo limpio = datos
+    |> seleccionar [pais, anio, co2, poblacion, energia_renovable]
+    |> filtrar donde co2 > 0.0 && anio >= 2015
+    |> eliminar nulos
+    |> convertir anio como numero
+    |> crear co2_per_capita = co2 / poblacion
+    |> ordenar por co2 desc
+
+mostrar(limpio)
+
+guardar limpio como "salidas/emisiones_limpias.csv"

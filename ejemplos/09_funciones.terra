@@ -1,0 +1,29 @@
+# Funciones definidas por el usuario
+
+funcion intensidad_carbono(co2, poblacion):
+    si poblacion <= 0.0:
+        retornar nulo
+    fin
+    retornar co2 / poblacion * 1000000.0
+fin
+
+funcion clasificar(valor):
+    si valor > 4.0:
+        retornar "alta"
+    sino si valor > 2.0:
+        retornar "media"
+    fin
+    retornar "baja"
+fin
+
+funcion factorial(n):
+    si n <= 1:
+        retornar 1
+    fin
+    retornar n * factorial(n - 1)
+fin
+
+fijo indice = intensidad_carbono(88.1, 52.3)
+mostrar("Intensidad:", redondear(indice, 3))
+mostrar("Categoria:", clasificar(indice))
+mostrar("Factorial de 5:", factorial(5))

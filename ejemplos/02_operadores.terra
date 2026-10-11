@@ -1,0 +1,15 @@
+# Precedencia y asociatividad
+
+mostrar(2 + 3 * 4)
+mostrar((2 + 3) * 4)
+mostrar(2 ^ 3 ^ 2)
+mostrar(10 % 3)
+mostrar(-5 + 2)
+
+mostrar(4.5 > 2.0 && 1 < 2)
+mostrar(!falso)
+mostrar("bosque" == "bosque")
+
+fijo sectores = ["energia", "transporte", "agricultura"]
+mostrar("transporte" en sectores)
+mostrar(sectores[0])

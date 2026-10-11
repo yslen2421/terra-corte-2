@@ -1,0 +1,6 @@
+columna,tipo,conteo,nulos,media,desviacion,minimo,mediana,maximo,distintos,mas_frecuente
+pais,texto,16,0,,,,,,4,Colombia
+anio,numero,16,0,2019.25,3.1304951684997055,2015,2019.5,2023,,
+co2,decimal,16,0,65.9625,21.06418366168823,36.9,68.5,92.5,,
+poblacion,numero,16,0,29587500.0,13540254.798193423,16200000,25050000.0,52300000,,
+energia_renovable,decimal,14,2,27.849999999999998,5.1295148968419095,22.1,26.65,41.8,,

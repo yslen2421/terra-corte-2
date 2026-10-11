@@ -1,0 +1,24 @@
+# Clasificacion de paises por emisiones per capita
+
+fijo paises = ["Colombia", "Peru", "Chile", "Ecuador"]
+fijo emisiones = [88.1, 55.6, 85.2, 39.5]
+fijo poblaciones = [52.3, 34.2, 19.6, 18.2]
+
+var i = 0
+var per_capita = 0.0
+
+mientras i < longitud(paises):
+    per_capita = emisiones[i] / poblaciones[i]
+    si per_capita > 4.0:
+        mostrar(paises[i], "- intensidad alta:", redondear(per_capita, 2))
+    sino si per_capita > 2.0:
+        mostrar(paises[i], "- intensidad media:", redondear(per_capita, 2))
+    sino:
+        mostrar(paises[i], "- intensidad baja:", redondear(per_capita, 2))
+    fin
+    i = i + 1
+fin
+
+mostrar("Promedio regional:", redondear(media(emisiones), 2))
+mostrar("Pais con mas emisiones:", maximo(emisiones))
+mostrar("Desviacion:", redondear(desviacion(emisiones), 3))

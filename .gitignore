@@ -1,0 +1,14 @@
+# Entorno virtual de Python
+venv/
+.venv/
+
+# Caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Archivos generados por arbol.sh (Java)
+.arbol/
+
+# JAR de ANTLR (generar.sh lo descarga)
+*.jar

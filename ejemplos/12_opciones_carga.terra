@@ -1,0 +1,13 @@
+# Corte 2: configuracion de separador y encabezado al cargar
+fijo crudo = cargar "datos/emisiones_sin_encabezado.csv" con separador ";" con encabezado falso
+mostrar(crudo |> limitar 3)
+
+# Sin encabezado, las columnas se llaman col1, col2, ... y se renombran
+fijo emisiones = crudo
+    |> renombrar col1 como pais
+    |> renombrar col2 como anio
+    |> renombrar col3 como co2
+    |> renombrar col4 como poblacion
+    |> renombrar col5 como energia_renovable
+
+mostrar(emisiones |> limitar 3)

@@ -1,0 +1,10 @@
+fijo emisiones = [12.4, 8.1, 0.0, 15.7]
+para valor en emisiones:
+    si valor > 10.0:
+        mostrar(valor, "-> alta")
+    sino si valor == 0.0:
+        mostrar(valor, "-> sin dato")
+    sino:
+        mostrar(valor, "-> moderada")
+    fin
+fin

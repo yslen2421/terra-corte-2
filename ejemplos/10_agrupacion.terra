@@ -1,0 +1,25 @@
+# Corte 2: agrupamiento y estadisticas descriptivas
+fijo datos = cargar "datos/emisiones_ejemplo.csv"
+
+# Estadisticas de CO2 por pais
+fijo por_pais = datos
+    |> agrupar por [pais]
+    |> resumir co2_total = suma(co2),
+               co2_promedio = redondear(media(co2), 2),
+               co2_mediana = mediana(co2),
+               co2_min = minimo(co2),
+               co2_max = maximo(co2),
+               co2_desv = redondear(desviacion(co2), 2),
+               registros = contar()
+    |> ordenar por co2_total desc
+
+mostrar(por_pais)
+guardar por_pais como "salidas/resumen_por_pais.csv"
+
+# Resumen de toda la tabla, sin agrupar
+fijo general = datos
+    |> resumir renovable_promedio = redondear(media(energia_renovable), 2),
+               con_dato = contar(energia_renovable),
+               filas = contar()
+
+mostrar(general)
