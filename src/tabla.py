@@ -199,6 +199,16 @@ def _dividir_registros(contenido: str, separador: str) -> list:
 
     Devuelve una lista de (linea_del_archivo, [campos]).
     """
+    # Atajo: sin comillas no hay campos protegidos, asi que cada linea
+    # se parte directamente por el separador. Da el mismo resultado que
+    # el automata y es mucho mas rapido en archivos grandes.
+    if '"' not in contenido:
+        rapidos = []
+        for numero, texto in enumerate(contenido.split("\n"), start=1):
+            texto = texto.rstrip("\r")
+            if texto.strip():
+                rapidos.append((numero, texto.split(separador)))
+        return rapidos
     registros = []
     registro = []
     campo = []

@@ -1,0 +1,62 @@
+# =====================================================================
+# Caso de estudio con datos reales
+# Emisiones de CO2 - Our World in Data (owid-co2-data.csv)
+# CO2 en millones de toneladas; CO2 per capita en toneladas por persona
+# =====================================================================
+
+fijo owid = cargar "datos/owid-co2-data.csv"
+
+# 1. Preparacion: solo paises (los agregados no tienen iso_code),
+#    columnas de interes y nombres en espanol
+fijo paises = owid
+    |> eliminar nulos en [iso_code]
+    |> seleccionar [country, year, population, co2, co2_per_capita]
+    |> renombrar country como pais
+    |> renombrar year como anio
+    |> renombrar population como poblacion
+
+# 2. Sudamerica desde el ano 2000
+fijo sudamerica = paises
+    |> filtrar donde pais en ["Argentina", "Brazil", "Chile", "Colombia", "Ecuador", "Peru"]
+    |> filtrar donde anio >= 2000
+    |> eliminar nulos en [co2, co2_per_capita]
+
+mostrar("Resumen descriptivo, Sudamerica 2000 en adelante:")
+mostrar(describir(sudamerica))
+
+# 3. Indicadores por pais
+fijo por_pais = sudamerica
+    |> agrupar por [pais]
+    |> resumir co2_acumulado = redondear(suma(co2), 1),
+               co2_promedio = redondear(media(co2), 2),
+               per_capita_promedio = redondear(media(co2_per_capita), 3),
+               per_capita_maximo = maximo(co2_per_capita),
+               anios = contar()
+    |> ordenar por co2_acumulado desc
+
+mostrar("CO2 por pais, 2000 en adelante:")
+mostrar(por_pais)
+guardar por_pais como "salidas/owid_sudamerica_por_pais.csv"
+
+# 4. Evolucion de Colombia
+fijo colombia = paises
+    |> filtrar donde pais == "Colombia" && anio >= 2010
+    |> eliminar nulos en [co2]
+    |> crear co2_por_millon_hab = redondear(co2 / poblacion * 1000000, 3)
+    |> seleccionar [anio, co2, co2_per_capita, co2_por_millon_hab]
+
+mostrar("Colombia desde 2010:")
+mostrar(colombia)
+guardar colombia como "salidas/owid_colombia.csv"
+
+# 5. Los 10 paises con mas emisiones por habitante en 2023
+fijo top_2023 = paises
+    |> filtrar donde anio == 2023
+    |> eliminar nulos en [co2_per_capita]
+    |> ordenar por co2_per_capita desc
+    |> seleccionar [pais, co2_per_capita, co2]
+    |> limitar 10
+
+mostrar("Mayor CO2 por habitante en 2023:")
+mostrar(top_2023)
+guardar top_2023 como "salidas/owid_top_2023.csv"

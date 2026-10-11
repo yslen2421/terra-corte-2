@@ -392,6 +392,28 @@ class VisitanteEvaluador(TerraVisitor):
         """Nombres de una lista_columnas: [a, b, c] -> ['a', 'b', 'c']."""
         return [t.getText() for t in ctx_lista.IDENTIFICADOR()]
 
+    def _nombres_usados(self, ctx_expr):
+        """
+        Conjunto de identificadores que aparecen en una expresion.
+
+        Recorre el subarbol una sola vez y guarda el resultado, para
+        que filtrar, crear y resumir declaren solo las columnas que la
+        expresion realmente usa, y no todas las de la tabla.
+        """
+        if not hasattr(self, "_cache_nombres"):
+            self._cache_nombres = {}
+        if ctx_expr not in self._cache_nombres:
+            nombres = set()
+            pendientes = [ctx_expr]
+            while pendientes:
+                nodo = pendientes.pop()
+                if hasattr(nodo, "symbol"):
+                    if nodo.symbol.type == TerraParser.IDENTIFICADOR:
+                        nombres.add(nodo.getText())
+                else:
+                    pendientes.extend(nodo.getChildren())
+            self._cache_nombres[ctx_expr] = nombres
+        return self._cache_nombres[ctx_expr]
     def _evaluar_en_fila(self, tabla, i, ctx_expr):
         """
         Evalua una expresion usando la fila i de la tabla.
@@ -402,7 +424,10 @@ class VisitanteEvaluador(TerraVisitor):
         fuera una variable.
         """
         respaldo = {}
+        usados = self._nombres_usados(ctx_expr)
         for nombre, valor in zip(tabla.columnas, tabla.filas[i]):
+            if nombre not in usados:
+                continue
             respaldo[nombre] = self.memoria.get(nombre)
             self.memoria[nombre] = {"valor": valor, "mutable": False}
         try:
@@ -424,7 +449,10 @@ class VisitanteEvaluador(TerraVisitor):
         de filas del grupo. Al terminar se restaura la memoria.
         """
         respaldo = {}
+        usados = self._nombres_usados(ctx_expr)
         for j, nombre in enumerate(tabla.columnas):
+            if nombre not in usados:
+                continue
             valores = [tabla.filas[i][j] for i in indices
                        if tabla.filas[i][j] is not None]
             respaldo[nombre] = self.memoria.get(nombre)
