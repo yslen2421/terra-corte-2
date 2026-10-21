@@ -607,6 +607,198 @@ def _tablas_y_archivos() -> dict:
     ])
 
 
+# ---------------------------------------------------------------------
+# AYUDA DEL LENGUAJE
+# ---------------------------------------------------------------------
+
+# categoria -> lista de (nombre, forma de escribirlo, que hace, ejemplo)
+GUIA = {
+    "datos": [
+        ("cargar", 'cargar "ruta.csv" [con separador ";"] [con encabezado falso]',
+         "lee un CSV y devuelve una tabla",
+         'fijo d = cargar "datos/emisiones_ejemplo.csv"'),
+        ("guardar", 'guardar tabla como "ruta.csv" [con separador ";"]',
+         "escribe una tabla en un CSV",
+         'guardar d como "salidas/copia.csv"'),
+        ("seleccionar", "|> seleccionar [col1, col2]",
+         "deja solo esas columnas", "d |> seleccionar [pais, co2]"),
+        ("filtrar", "|> filtrar donde condicion",
+         "deja las filas que cumplen la condicion",
+         "d |> filtrar donde co2 > 80"),
+        ("crear", "|> crear nombre = expresion",
+         "agrega una columna calculada",
+         "d |> crear per_capita = co2 * 1000000 / poblacion"),
+        ("renombrar", "|> renombrar viejo como nuevo",
+         "cambia el nombre de una columna",
+         "d |> renombrar co2 como emisiones"),
+        ("ordenar", "|> ordenar por columna [asc | desc]",
+         "ordena las filas", "d |> ordenar por co2 desc"),
+        ("eliminar", "|> eliminar duplicados  /  |> eliminar nulos [en [cols]]",
+         "quita filas repetidas o con nulos", "d |> eliminar nulos"),
+        ("rellenar", "|> rellenar nulos en columna con valor",
+         "reemplaza los nulos", "d |> rellenar nulos en energia_renovable con 0.0"),
+        ("convertir", "|> convertir columna como tipo",
+         "cambia el tipo de una columna", "d |> convertir anio como texto"),
+        ("limitar", "|> limitar n", "deja las primeras n filas", "d |> limitar 5"),
+        ("agrupar", "|> agrupar por [cols] |> resumir nombre = agregacion, ...",
+         "una fila por grupo con sus estadisticas",
+         "d |> agrupar por [pais] |> resumir total = suma(co2), n = contar()"),
+        ("describir", "describir(tabla)",
+         "estadisticas de cada columna", "mostrar(describir(d))"),
+    ],
+    "estadistica": [
+        ("suma", "suma(lista)", "suma de los valores", "suma([1, 2, 3])"),
+        ("media", "media(lista)", "promedio", "media([1, 2, 3])"),
+        ("mediana", "mediana(lista)", "valor central", "mediana([3, 1, 2])"),
+        ("minimo", "minimo(lista) / maximo(lista)", "extremos", "maximo([3, 9, 2])"),
+        ("desviacion", "desviacion(lista)", "desviacion estandar muestral",
+         "desviacion([2, 4, 6])"),
+        ("contar", "contar() / contar(lista)",
+         "filas del grupo (en resumir) o elementos", "contar([1, 2, 3])"),
+        ("redondear", "redondear(x, decimales)", "redondea", "redondear(3.14159, 2)"),
+        ("raiz", "raiz(x) / absoluto(x)", "raiz cuadrada y valor absoluto", "raiz(16)"),
+        ("longitud", "longitud(lista)", "cantidad de elementos", "longitud([4, 5, 6])"),
+        ("a_numero", "a_numero(x) / a_decimal(x) / a_texto(x)",
+         "conversiones de tipo", 'a_numero("42")'),
+    ],
+    "matematicas": [
+        ("pi", "pi() / e()", "constantes", "pi()"),
+        ("seno", "seno(x) / coseno(x) / tangente(x)",
+         "trigonometricas, x en radianes", "seno(pi() / 6)"),
+        ("exp", "exp(x)", "e elevado a x", "exp(1)"),
+        ("ln", "ln(x) / log(x) / log(x, base)", "logaritmos", "log(8, 2)"),
+        ("piso", "piso(x) / techo(x)", "redondeo hacia abajo / arriba", "piso(2.7)"),
+        ("factorial", "factorial(n)", "n!", "factorial(5)"),
+        ("aleatorio", "aleatorio() / semilla(n)",
+         "decimal al azar en [0, 1); la semilla lo hace reproducible",
+         "semilla(42)"),
+    ],
+    "matrices": [
+        ("matriz", "matriz(f, c, valor) / ceros(f, c) / unos(f, c)",
+         "crea una matriz", "ceros(2, 3)"),
+        ("identidad", "identidad(n) / aleatoria(f, c)",
+         "identidad o matriz al azar", "identidad(3)"),
+        ("dimension", "dimension(M)", "[filas, columnas]", "dimension([[1, 2], [3, 4]])"),
+        ("transpuesta", "transpuesta(M)", "intercambia filas y columnas",
+         "transpuesta([[1, 2, 3]])"),
+        ("mult_matriz", "mult_matriz(A, B)", "producto matricial",
+         "mult_matriz([[1, 2]], [[3], [4]])"),
+        ("sumar_matrices", "sumar_matrices(A, B) / restar_matrices(A, B)",
+         "suma o resta elemento a elemento", "sumar_matrices(A, B)"),
+        ("escalar", "escalar(k, M)", "multiplica por un numero", "escalar(2, [[1, 2]])"),
+        ("determinante", "determinante(M) / inversa(M) / traza(M)",
+         "por eliminacion de Gauss y Gauss-Jordan", "determinante([[4, 7], [2, 6]])"),
+        ("producto_punto", "producto_punto(a, b) / norma(v)",
+         "operaciones con vectores", "norma([3, 4])"),
+    ],
+    "funciones": [
+        ("funcion", "funcion nombre(a, b):  ...  retornar valor  fin",
+         "define una funcion (cada parte en su propia linea)",
+         "funcion doble(x):  |  retornar x * 2  |  fin"),
+        ("anonima", "funcion(x) => expresion",
+         "funcion sin nombre que se guarda o se pasa como valor",
+         "fijo doble = funcion(x) => x * 2"),
+        ("mapear", "mapear(lista, f)", "aplica f a cada elemento",
+         "mapear([1, 2, 3], funcion(x) => x * 2)"),
+        ("filtro", "filtro(lista, f)", "deja los elementos donde f es verdadero",
+         "filtro([1, 2, 3, 4], funcion(x) => x % 2 == 0)"),
+        ("reducir", "reducir(lista, f [, inicial])", "combina todo en un valor",
+         "reducir([1, 2, 3], funcion(a, b) => a + b)"),
+        ("ordenar_por", 'ordenar_por(lista, f [, "desc"])', "ordena segun f",
+         'ordenar_por(["ab", "c"], funcion(t) => longitud(t))'),
+        ("todos", "todos(lista, f) / alguno(lista, f)",
+         "si todos o alguno cumplen", "alguno([1, 5], funcion(x) => x > 3)"),
+        ("componer", "componer(f, g) / aplicar(f, a, b, ...)",
+         "funcion que calcula f(g(x)) / llama a f con esos argumentos",
+         "componer(raiz, absoluto)"),
+        ("aplicar_matriz", "aplicar_matriz(M, f)", "aplica f a cada celda",
+         "aplicar_matriz([[1, 2]], funcion(x) => x ^ 2)"),
+        ("rango", "rango(fin) / rango(inicio, fin [, paso])", "lista de enteros",
+         "rango(1, 6)"),
+    ],
+    "tablas": [
+        ("columna", 'columna(tabla, "nombre")', "la columna como lista",
+         'media(columna(d, "co2"))'),
+        ("nombres", "nombres(tabla) / num_filas(tabla) / fila(tabla, i)",
+         "estructura de la tabla", "num_filas(d)"),
+        ("valores_unicos", 'valores_unicos(tabla, "columna")',
+         "valores distintos en orden de aparicion", 'valores_unicos(d, "pais")'),
+        ("tabla_desde", "tabla_desde(columnas, filas)", "crea una tabla",
+         'tabla_desde(["a", "b"], [[1, 2], [3, 4]])'),
+        ("a_matriz", "a_matriz(tabla [, columnas])", "tabla numerica a matriz",
+         'a_matriz(d, ["anio", "co2"])'),
+        ("unir", 'unir(t1, t2, "clave" [, "izquierda"])',
+         "une dos tablas por una columna", 'unir(d, metas, "pais")'),
+        ("concatenar", "concatenar(t1, t2)", "pone las filas de t2 debajo de t1",
+         "concatenar(d, extra)"),
+    ],
+    "archivos": [
+        ("leer_archivo", 'leer_archivo("ruta") / leer_lineas("ruta")',
+         "lee un archivo de texto", 'leer_lineas("salidas/registro.txt")'),
+        ("escribir_archivo", 'escribir_archivo("ruta", texto) / agregar_archivo("ruta", texto)',
+         "escribe o agrega texto", 'agregar_archivo("log.txt", "listo\\n")'),
+        ("existe_archivo", 'existe_archivo("ruta") / borrar_archivo("ruta")',
+         "consulta o borra un archivo", 'existe_archivo("log.txt")'),
+        ("leer", 'leer("mensaje") / leer_numero("mensaje")',
+         "pide un dato por teclado", 'fijo kwh = leer_numero("kWh: ")'),
+    ],
+    "memoria": [
+        ("memoria_info", "memoria_info()", "variables, tipo y memoria que ocupan",
+         "mostrar(memoria_info())"),
+        ("memoria_estado", "memoria_estado()", "limites y uso actual",
+         "mostrar(memoria_estado())"),
+        ("liberar", 'liberar("variable")', "elimina una variable", 'liberar("M")'),
+        ("fijar_limite_recursion", "fijar_limite_recursion(n)",
+         "cambia el limite de llamadas anidadas (maximo 2000)",
+         "fijar_limite_recursion(500)"),
+    ],
+}
+
+
+def _ayuda() -> dict:
+    """
+    ayuda()             -> lista las categorias
+    ayuda("matrices")   -> todas las funciones de una categoria
+    ayuda("mapear")     -> como se escribe una funcion, con ejemplo
+    """
+
+    def mostrar_entrada(nombre, forma, descripcion, ejemplo):
+        print(f"  {forma}")
+        print(f"      {descripcion}")
+        print(f"      ejemplo: {ejemplo}")
+
+    def ayuda(args, linea):
+        if len(args) > 1:
+            raise ErrorDatos("ayuda() recibe 0 o 1 argumento")
+        if not args:
+            print("Terra - ayuda del lenguaje")
+            print("Escribe ayuda(\"categoria\") o ayuda(\"funcion\").")
+            print("Categorias:")
+            for categoria, entradas in GUIA.items():
+                nombres = ", ".join(e[0] for e in entradas)
+                print(f"  {categoria:<12} {nombres}")
+            return None
+
+        tema = args[0]
+        if not isinstance(tema, str):
+            raise ErrorDatos("ayuda() recibe un texto, por ejemplo ayuda(\"mapear\")")
+        if tema in GUIA:
+            print(f"Categoria: {tema}")
+            for entrada in GUIA[tema]:
+                mostrar_entrada(*entrada)
+            return None
+        for categoria, entradas in GUIA.items():
+            for entrada in entradas:
+                if entrada[0] == tema or f"{tema}(" in entrada[1]:
+                    print(f"[{categoria}]")
+                    mostrar_entrada(*entrada)
+                    return None
+        raise ErrorDatos(
+            f"no hay ayuda para '{tema}'. Escribe ayuda() para ver las categorias")
+
+    return {"ayuda": ayuda}
+
+
 def funciones(evaluador) -> dict:
     """
     Todas las funciones de la biblioteca: {nombre: funcion(args, linea)}.
@@ -623,4 +815,5 @@ def funciones(evaluador) -> dict:
     catalogo.update(_orden_superior(evaluador))
     catalogo.update(_entrada())
     catalogo.update(_tablas_y_archivos())
+    catalogo.update(_ayuda())
     return catalogo

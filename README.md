@@ -31,6 +31,11 @@ Proyecto del curso **Lenguajes de Programación y Transducción**, Universidad S
 - **Tipado estricto:** `numero`, `decimal`, `texto`, `booleano`, `nulo`, `lista` y `tabla`, con errores claros cuando se mezclan tipos incompatibles.
 - **Errores en español con número de línea**, en las etapas léxica, sintáctica y semántica.
 - Variables, control de flujo, funciones definidas por el usuario y funciones incorporadas.
+- **Librería matemática y de matrices desde cero:** seno, coseno, exponencial y logaritmos por series de Taylor; determinante e inversa por eliminación de Gauss.
+- **Funciones como valores:** funciones anónimas (`funcion(x) => x * 2`) y de orden superior (`mapear`, `filtro`, `reducir`...).
+- **Gestor de memoria** con límite de recursión configurable, consulta de memoria y liberación de variables.
+- **Entrada por teclado**, archivos de texto y combinación de tablas (`unir`, `concatenar`).
+- **Ayuda integrada:** `ayuda()` muestra cómo se escribe cada instrucción, con ejemplos.
 
 ---
 
@@ -48,6 +53,9 @@ terra/
     visitante_evaluador.py  # Semantica: Visitor y tabla de simbolos
     tabla.py                # Estructura Tabla, lector y escritor CSV
     operaciones.py          # Operaciones de datos y estadistica descriptiva
+    biblioteca.py           # Catalogo de funciones incorporadas y ayuda()
+    matematicas.py          # Series de Taylor, vectores y matrices
+    memoria.py              # Gestor de memoria y limite de recursion
     manejador_errores.py    # Errores lexicos y sintacticos en espanol
     validador.py            # Validador interactivo de sintaxis
   ejemplos/                 # Programas de ejemplo (.terra)
@@ -55,7 +63,8 @@ terra/
   salidas/                  # Archivos generados por los ejemplos
   tests/
     test_terra.py           # Pruebas del primer corte
-    test_corte2.py          # Pruebas del segundo corte
+    test_corte2.py          # Pruebas del segundo corte (datos)
+    test_biblioteca.py      # Pruebas de matematicas, memoria, orden superior...
   docs/                     # Informes y gramatica BNF
   generar.sh                # Regenera lexer, parser y visitor
   arbol.sh                  # Muestra el arbol de analisis
@@ -70,6 +79,8 @@ La arquitectura separa las responsabilidades:
 | `visitante_evaluador.py` | Semántica: recorre el árbol, mantiene la tabla de símbolos y valida tipos |
 | `operaciones.py` | Manipulación de tablas; no conoce el árbol de ANTLR |
 | `tabla.py` | Representación de los datos y lectura/escritura de archivos |
+| `biblioteca.py` | Registro de las funciones incorporadas; agregar una función no requiere tocar la gramática |
+| `matematicas.py` / `memoria.py` | Cálculo numérico y control de recursos |
 
 ---
 
@@ -129,6 +140,8 @@ chmod +x generar.sh arbol.sh
 | `./arbol.sh archivo.terra -gui` | Árbol en una ventana, exportable a PNG |
 | `pytest tests/ -q` | Ejecuta todas las pruebas |
 
+Dentro de Terra, `ayuda()` lista todas las categorías, `ayuda("matrices")` muestra las funciones de una categoría y `ayuda("mapear")` explica una función con un ejemplo.
+
 Terra solo ejecuta archivos con extensión `.terra`.
 
 ---
@@ -178,6 +191,10 @@ fin
 ```
 
 Los bloques se cierran con `fin`.
+
+### Textos
+
+Los textos van entre comillas dobles y admiten las secuencias de escape `\n` (salto de línea), `\t` (tabulador), `\"` (comilla) y `\\` (barra invertida).
 
 ---
 
@@ -267,6 +284,82 @@ La carpeta de destino debe existir.
 
 ---
 
+## Matemáticas y matrices
+
+Todas las funciones están implementadas sin `import math`.
+
+| Función | Resultado |
+|---|---|
+| `pi()`, `e()` | Constantes |
+| `seno(x)`, `coseno(x)`, `tangente(x)` | Trigonométricas (radianes), por series de Taylor con reducción del ángulo |
+| `exp(x)`, `ln(x)`, `log(x)`, `log(x, base)` | Exponencial y logaritmos |
+| `piso(x)`, `techo(x)`, `factorial(n)` | Redondeos y factorial |
+| `aleatorio()`, `semilla(n)` | Generador congruencial lineal reproducible |
+| `matriz(f, c, v)`, `ceros(f, c)`, `unos(f, c)`, `identidad(n)`, `aleatoria(f, c)` | Crear matrices |
+| `dimension(M)`, `transpuesta(M)`, `traza(M)` | Consultas |
+| `mult_matriz(A, B)`, `sumar_matrices(A, B)`, `restar_matrices(A, B)`, `escalar(k, M)` | Operaciones |
+| `determinante(M)`, `inversa(M)` | Eliminación de Gauss y Gauss-Jordan |
+| `producto_punto(a, b)`, `norma(v)` | Vectores |
+
+```
+fijo A = [[4, 7], [2, 6]]
+mostrar(determinante(A))               # 10.0
+mostrar(mult_matriz(A, inversa(A)))    # [[1.0, 0.0], [0.0, 1.0]]
+```
+
+## Funciones anónimas y de orden superior
+
+```
+fijo doble = funcion(x) => x * 2
+mapear([1, 2, 3], doble)                          # [2, 4, 6]
+filtro(rango(1, 11), funcion(n) => n % 2 == 0)    # [2, 4, 6, 8, 10]
+reducir([1, 2, 3, 4], funcion(a, b) => a + b)     # 10
+mapear([1, 4, 9], raiz)                           # una funcion con nombre tambien es un valor
+```
+
+| Función | Resultado |
+|---|---|
+| `mapear(lista, f)` | Aplica `f` a cada elemento |
+| `filtro(lista, f)` | Elementos donde `f` es verdadero |
+| `reducir(lista, f [, inicial])` | Combina la lista en un valor |
+| `ordenar_por(lista, f [, "desc"])` | Ordena según `f` |
+| `todos(lista, f)`, `alguno(lista, f)` | Cuantificadores |
+| `componer(f, g)`, `aplicar(f, ...)` | `f(g(x))` y llamada indirecta |
+| `aplicar_matriz(M, f)` | Aplica `f` a cada celda |
+| `rango(fin)`, `rango(inicio, fin [, paso])` | Lista de enteros |
+
+Una función anónima puede usar las variables del programa (`funcion(x) => x * factor`). La función se llama `filtro` y no `filtrar` porque `filtrar` es parte de las tuberías.
+
+## Memoria y recursión
+
+| Función | Resultado |
+|---|---|
+| `memoria_info()` | Tabla con cada variable, su tipo, elementos y memoria estimada |
+| `memoria_estado()` | Variables, funciones, llamadas anidadas y límites |
+| `liberar("x")` | Elimina una variable |
+| `fijar_limite_recursion(n)` | Cambia el límite de llamadas anidadas (por defecto 200, máximo 2000) |
+
+Una recursión infinita se detiene con un mensaje en español en lugar de un error de Python, y las matrices de más de 5 millones de celdas se rechazan antes de crearse.
+
+## Entrada, tablas y archivos
+
+| Función | Resultado |
+|---|---|
+| `leer("mensaje")`, `leer_numero("mensaje")` | Lectura por teclado; `leer_numero` repite la pregunta si no recibe un número |
+| `columna(t, "co2")` | Una columna como lista (para usar con `media`, `mapear`, etc.) |
+| `nombres(t)`, `num_filas(t)`, `fila(t, i)`, `valores_unicos(t, "col")` | Estructura de una tabla |
+| `tabla_desde(columnas, filas)` | Crea una tabla |
+| `a_matriz(t [, columnas])` | Tabla numérica a matriz |
+| `unir(t1, t2, "clave" [, "izquierda"])` | Une tablas por una columna |
+| `concatenar(t1, t2)` | Filas de `t2` debajo de las de `t1` |
+| `leer_archivo`, `leer_lineas`, `escribir_archivo`, `agregar_archivo`, `existe_archivo`, `borrar_archivo` | Archivos de texto |
+
+`guardar` también acepta separador: `guardar d como "x.csv" con separador ";"`.
+
+Una tubería dentro de los argumentos de una función va entre paréntesis: `unir((d |> filtrar donde anio == 2021), metas, "pais")`.
+
+---
+
 ## Decisiones de diseño
 
 - **Las tuberías no modifican la tabla original.** Cada operación devuelve una tabla nueva, así un paso nunca altera en silencio un resultado anterior.
@@ -274,6 +367,9 @@ La carpeta de destino debe existir.
 - **El tipo se infiere por columna, no por celda.** Así una columna nunca queda con números en unas filas y textos en otras.
 - **`con encabezado falso` en lugar de `sin encabezado`.** Evita reservar la palabra `sin`, que en un lenguaje matemático puede ser una función.
 - **Operadores lógicos simbólicos (`&&`, `||`, `!`).** Si `y` y `o` fueran palabras reservadas, no se podrían usar como nombres de variables.
+- **Catálogo de funciones separado del evaluador.** Las funciones nuevas se registran en `biblioteca.py` con su nombre y número de argumentos; no hace falta tocar la gramática.
+- **Funciones como valores.** El nombre de una función sin paréntesis es un valor, y `funcion(x) => ...` reutiliza la palabra reservada `funcion` sin agregar otra.
+- **Límite de recursión de Terra antes que el de Python.** El gestor de memoria ajusta la pila de Python para que el usuario siempre vea el mensaje de Terra.
 - **Lector CSV con dos caminos.** Un autómata que maneja comillas, separadores dentro de campos y comillas escapadas; y un atajo para archivos sin comillas que da el mismo resultado y es mucho más rápido.
 
 ---
@@ -308,6 +404,11 @@ Error en evaluacion: [linea 1] el archivo parece usar ',' como separador, no ';'
 | `11_describir.terra` | Resumen descriptivo |
 | `12_opciones_carga.terra` | Separador y encabezado configurables |
 | `13_caso_owid.terra` | Caso de estudio con datos reales |
+| `14_matematicas.terra` | Trigonometría, logaritmos y álgebra lineal |
+| `15_memoria_recursion.terra` | Recursión, consulta y liberación de memoria |
+| `16_orden_superior.terra` | Funciones anónimas y de orden superior |
+| `17_entrada.terra` | Calculadora de huella de carbono por teclado |
+| `18_tablas_archivos.terra` | Unir y concatenar tablas, matrices desde tablas y archivos de texto |
 
 ```bash
 python src/terra.py ejemplos/10_agrupacion.terra
@@ -340,8 +441,9 @@ Fuente: Our World in Data, *CO₂ and Greenhouse Gas Emissions* (https://github.
 ## Pruebas
 
 ```bash
-pytest tests/ -q                    # todas (153)
-pytest tests/test_corte2.py -v      # solo las del segundo corte (53)
+pytest tests/ -q                      # todas (207)
+pytest tests/test_corte2.py -v        # datos del segundo corte (53)
+pytest tests/test_biblioteca.py -v    # matematicas, memoria, orden superior... (54)
 ```
 
 Las pruebas cubren casos positivos y negativos: análisis léxico y sintáctico, tipos, variables, control de flujo, funciones, lectura de CSV con comillas y filas malformadas, cada operación de tubería, agregaciones, `describir` y los errores semánticos de cada instrucción.
@@ -353,7 +455,7 @@ Las pruebas cubren casos positivos y negativos: análisis léxico y sintáctico,
 | Corte | Contenido | Estado |
 |---|---|---|
 | Primero | Gramática, lexer y parser, variables, expresiones, control de flujo, funciones, errores léxicos y sintácticos | Completo |
-| Segundo | Tabla y CSV desde cero, tuberías, agrupamiento, agregaciones, `describir`, errores semánticos, caso con datos reales | Completo |
+| Segundo | Tabla y CSV desde cero, tuberías, agrupamiento, agregaciones, `describir`, errores semánticos, caso con datos reales, matemáticas y matrices, gestor de memoria, orden superior, entrada por teclado, archivos y `ayuda()` | Completo |
 | Tercero | Visualizaciones exportadas a PNG, CLI definitiva, caso de estudio final | Pendiente |
 
 `graficar` ya se reconoce sintácticamente; su ejecución corresponde al tercer corte.
