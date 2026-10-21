@@ -1,0 +1,29 @@
+# Gestor de memoria y limite de recursion
+
+funcion factorial_rec(n):
+    si n <= 1:
+        retornar 1
+    fin
+    retornar n * factorial_rec(n - 1)
+fin
+
+funcion fibonacci(n):
+    si n < 2:
+        retornar n
+    fin
+    retornar fibonacci(n - 1) + fibonacci(n - 2)
+fin
+
+mostrar("factorial_rec(20) =", factorial_rec(20))
+mostrar("factorial_rec(150) tiene", longitud(a_texto(factorial_rec(150))), "cifras")
+mostrar("fibonacci(15) =", fibonacci(15))
+
+var M = aleatoria(100, 100)
+fijo datos = cargar "datos/emisiones_ejemplo.csv"
+fijo serie = [1, 2, 3, 4, 5]
+mostrar(memoria_info())
+mostrar(memoria_estado())
+
+liberar("M")
+mostrar("Despues de liberar M:")
+mostrar(memoria_info())

@@ -1,0 +1,32 @@
+# Funciones anonimas y de orden superior
+fijo numeros = rango(1, 11)
+fijo doble = funcion(x) => x * 2
+
+mostrar("rango(1, 11) =", numeros)
+mostrar("dobles =", mapear(numeros, doble))
+mostrar("pares =", filtro(numeros, funcion(n) => n % 2 == 0))
+mostrar("suma =", reducir(numeros, funcion(a, b) => a + b))
+mostrar("producto =", reducir(numeros, funcion(a, b) => a * b, 1))
+mostrar("doble(21) =", doble(21))
+
+# Las funciones con nombre tambien se pasan como valores
+funcion cuadrado(x):
+    retornar x * x
+fin
+mostrar("cuadrados =", mapear(numeros, cuadrado))
+mostrar("raices =", mapear([1, 4, 9, 16], raiz))
+
+# Una funcion anonima puede usar variables del programa
+fijo factor_emision = 0.42
+fijo consumos = [120, 85, 230, 60]
+mostrar("emisiones =", mapear(consumos, funcion(kwh) => redondear(kwh * factor_emision, 1)))
+
+# Ordenar, verificar y componer
+mostrar("consumos de mayor a menor =", ordenar_por(consumos, funcion(c) => c, "desc"))
+mostrar("todos positivos =", todos(consumos, funcion(c) => c > 0))
+mostrar("alguno mayor a 200 =", alguno(consumos, funcion(c) => c > 200))
+fijo doble_del_seno = componer(doble, seno)
+mostrar("doble(seno(pi/2)) =", doble_del_seno(pi() / 2))
+
+# Aplicar una funcion a cada elemento de una matriz
+mostrar("cuadrados de la matriz =", aplicar_matriz([[1, 2], [3, 4]], funcion(x) => x ^ 2))

@@ -1,0 +1,3 @@
+Analisis de emisiones
+Paises: 4
+Media co2: 65.96

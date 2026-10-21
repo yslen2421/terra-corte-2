@@ -1,0 +1,25 @@
+# Libreria matematica escrita desde cero (series de Taylor)
+mostrar("seno(pi/6) =", seno(pi() / 6))
+mostrar("coseno(pi) =", coseno(pi()))
+mostrar("tangente(pi/4) =", tangente(pi() / 4))
+mostrar("exp(1) =", exp(1))
+mostrar("ln(e) =", ln(e()))
+mostrar("log(1000) =", log(1000), " log2(8) =", log(8, 2))
+mostrar("factorial(10) =", factorial(10))
+
+# Algebra lineal
+fijo A = [[4, 7], [2, 6]]
+fijo B = [[1, 2], [3, 4]]
+mostrar("dimension(A) =", dimension(A))
+mostrar("A x B =", mult_matriz(A, B))
+mostrar("A + B =", sumar_matrices(A, B))
+mostrar("transpuesta(A) =", transpuesta(A))
+mostrar("det(A) =", determinante(A))
+mostrar("inversa(A) =", inversa(A))
+mostrar("A x inversa(A) =", mult_matriz(A, inversa(A)))
+mostrar("identidad(3) =", identidad(3))
+mostrar("producto punto =", producto_punto([1, 2, 3], [4, 5, 6]))
+mostrar("norma([3, 4]) =", norma([3, 4]))
+
+semilla(42)
+mostrar("aleatoria 2x2 =", aleatoria(2, 2))

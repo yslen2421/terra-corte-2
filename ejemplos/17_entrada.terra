@@ -1,0 +1,12 @@
+# Entrada por teclado: calculadora de huella de carbono
+fijo nombre = leer("Como te llamas? ")
+fijo kwh = leer_numero("Cuantos kWh consumes al mes? ")
+fijo factor = 0.126
+fijo emision = redondear(kwh * factor, 2)
+mostrar("Hola", nombre)
+mostrar("Tu consumo genera", emision, "kg de CO2 al mes y", redondear(emision * 12, 1), "kg al ano")
+si emision > 20:
+    mostrar("Esta por encima del promedio")
+sino:
+    mostrar("Esta por debajo del promedio")
+fin

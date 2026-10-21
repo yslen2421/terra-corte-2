@@ -199,5 +199,10 @@ class TerraVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by TerraParser#funcion_anonima.
+    def visitFuncion_anonima(self, ctx:TerraParser.Funcion_anonimaContext):
+        return self.visitChildren(ctx)
+
+
 
 del TerraParser

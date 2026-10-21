@@ -88,7 +88,7 @@ retornar_stmt
 // ================= DOMINIO: DATOS Y VISUALIZACION =================
 
 guardar_stmt
-    : GUARDAR expr COMO expr NL
+    : GUARDAR expr COMO expr (CON SEPARADOR expr)? NL
     ;
 
 graficar_stmt
@@ -182,6 +182,7 @@ primario
     | NULO
     | carga
     | llamada
+    | funcion_anonima
     | IDENTIFICADOR
     | lista
     | '(' expresion ')'
@@ -204,6 +205,9 @@ lista
     : '[' (expr (',' expr)*)? ']'
     ;
 
+funcion_anonima
+    : FUNCION '(' (IDENTIFICADOR (',' IDENTIFICADOR)*)? ')' FLECHA_FUNCION expr
+    ;
 // ================= LEXICO =================
 // Las palabras reservadas van ANTES de IDENTIFICADOR.
 
@@ -264,6 +268,7 @@ BOOLEANO     : 'verdadero' | 'falso';
 NULO         : 'nulo';
 
 FLECHA       : '|>';
+FLECHA_FUNCION : '=>';
 AND          : '&&';
 OR           : '||';
 IGUAL        : '==';

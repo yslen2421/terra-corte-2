@@ -34,6 +34,7 @@ from gramaticas.TerraParser import TerraParser
 from gramaticas.TerraVisitor import TerraVisitor
 from src.tabla import Tabla, ErrorDatos, leer_csv, escribir_csv
 from src import operaciones as ops
+from src import biblioteca
 
 class RetornoSenal(Exception):
     """
@@ -78,6 +79,8 @@ def nombre_tipo(valor) -> str:
         return "nulo"
     if isinstance(valor, Tabla):
         return "tabla"
+    if biblioteca.es_funcion(valor):
+        return "funcion"
     return "desconocido"
 
 
@@ -304,7 +307,14 @@ class VisitanteEvaluador(TerraVisitor):
                 f"{nombre_tipo(ruta)}", linea)
 
         try:
-            escribir_csv(tabla, ruta)
+            separador = ","
+            if ctx.SEPARADOR():
+                separador = self.visit(ctx.expr(2))
+                if not isinstance(separador, str):
+                    raise ErrorSemantico(
+                        f"el separador debe ser texto, se recibio "
+                        f"{nombre_tipo(separador)}", linea)
+            escribir_csv(tabla, ruta, separador)
         except ErrorDatos as e:
             raise ErrorSemantico(str(e), linea)
         return None
@@ -800,7 +810,13 @@ class VisitanteEvaluador(TerraVisitor):
             return float(ctx.DECIMAL().getText())
         if ctx.TEXTO() is not None:
             crudo = ctx.TEXTO().getText()[1:-1]
-            return crudo.replace('\\"', '"')
+            # Secuencias de escape: \n salto de linea, \t tabulador,
+            # \" comilla y \\ barra invertida
+            return (crudo.replace("\\\\", "\x00")
+                    .replace('\\"', '"')
+                    .replace("\\n", "\n")
+                    .replace("\\t", "\t")
+                    .replace("\x00", "\\"))
         if ctx.BOOLEANO() is not None:
             return ctx.BOOLEANO().getText() == "verdadero"
         if ctx.NULO() is not None:
@@ -814,11 +830,31 @@ class VisitanteEvaluador(TerraVisitor):
         if ctx.expresion() is not None:
             return self.visit(ctx.expresion())
 
+        if ctx.funcion_anonima() is not None:
+            return self.visit(ctx.funcion_anonima())
+
         nombre = ctx.IDENTIFICADOR().getText()
         if nombre not in self.memoria:
+            # El nombre de una funcion escrito sin parentesis es un valor
+            # de tipo funcion: asi se puede pasar a mapear, filtro, etc.
+            if nombre in self.funciones or nombre in self._incorporadas():
+                return biblioteca.FuncionNombrada(nombre)
             raise ErrorSemantico(
                 f"la variable '{nombre}' no ha sido declarada", linea)
         return self.memoria[nombre]["valor"]
+
+    def visitFuncion_anonima(self, ctx):
+        """
+        funcion(x, y) => expresion
+        Crea un valor de tipo funcion. El cuerpo no se evalua aqui, sino
+        cada vez que alguien llama a la funcion.
+        """
+        parametros = [t.getText() for t in ctx.IDENTIFICADOR()]
+        if len(set(parametros)) != len(parametros):
+            raise ErrorSemantico(
+                "un parametro aparece repetido en la funcion anonima",
+                ctx.start.line)
+        return biblioteca.FuncionAnonima(parametros, ctx.expr())
 
     def visitLista(self, ctx: TerraParser.ListaContext):
         return [self.visit(e) for e in ctx.expr()]
@@ -828,24 +864,47 @@ class VisitanteEvaluador(TerraVisitor):
     # -----------------------------------------------------------------
 
     def _incorporadas(self):
-        """Catalogo de funciones que trae el lenguaje."""
-        return {
-            "longitud": self._f_longitud,
-            "suma": self._f_suma,
-            "describir": self._f_describir,
-            "contar": self._f_contar,
-            "media": self._f_media,
-            "mediana": self._f_mediana,
-            "minimo": self._f_minimo,
-            "maximo": self._f_maximo,
-            "desviacion": self._f_desviacion,
-            "raiz": self._f_raiz,
-            "absoluto": self._f_absoluto,
-            "redondear": self._f_redondear,
-            "a_numero": self._f_a_numero,
-            "a_decimal": self._f_a_decimal,
-            "a_texto": self._f_a_texto,
-        }
+        """
+        Catalogo de funciones que trae el lenguaje.
+
+        Se arma una sola vez y se guarda, porque visitLlamada lo consulta
+        en cada llamada (en un 'filtrar' eso es una vez por fila). A las
+        funciones propias del evaluador se suman las de src/biblioteca.py:
+        matematicas, matrices y las de los pasos siguientes.
+        """
+        if getattr(self, "_catalogo", None) is None:
+            self._catalogo = {
+                "longitud": self._f_longitud,
+                "suma": self._f_suma,
+                "describir": self._f_describir,
+                "contar": self._f_contar,
+                "media": self._f_media,
+                "mediana": self._f_mediana,
+                "minimo": self._f_minimo,
+                "maximo": self._f_maximo,
+                "desviacion": self._f_desviacion,
+                "raiz": self._f_raiz,
+                "absoluto": self._f_absoluto,
+                "redondear": self._f_redondear,
+                "a_numero": self._f_a_numero,
+                "a_decimal": self._f_a_decimal,
+                "a_texto": self._f_a_texto,
+            }
+            for nombre, funcion in biblioteca.funciones(self).items():
+                self._catalogo[nombre] = self._envolver(funcion)
+        return self._catalogo
+
+    def _envolver(self, funcion):
+        """
+        Adapta una funcion de la biblioteca: los ErrorDatos que lance se
+        convierten en ErrorSemantico con la linea de la llamada.
+        """
+        def llamar(args, linea):
+            try:
+                return funcion(args, linea)
+            except ErrorDatos as e:
+                raise ErrorSemantico(str(e), linea)
+        return llamar
 
     def visitLlamada(self, ctx: TerraParser.LlamadaContext):
         """
@@ -865,6 +924,14 @@ class VisitanteEvaluador(TerraVisitor):
         if nombre in self.funciones:
             return self._invocar(nombre, argumentos, linea)
 
+                # Una variable que guarda una funcion tambien se puede llamar
+        if nombre in self.memoria and biblioteca.es_funcion(
+                self.memoria[nombre]["valor"]):
+            try:
+                return biblioteca.llamar_funcion(
+                    self, self.memoria[nombre]["valor"], argumentos, linea)
+            except ErrorDatos as e:
+                raise ErrorSemantico(str(e), linea)
         raise ErrorSemantico(f"la funcion '{nombre}' no existe", linea)
 
     def visitFuncion_decl(self, ctx):
@@ -934,6 +1001,11 @@ class VisitanteEvaluador(TerraVisitor):
             resultado = None
         except RetornoSenal as senal:
             resultado = senal.valor
+        except RecursionError:
+            raise ErrorSemantico(
+                f"la funcion '{nombre}' se llamo demasiadas veces de forma "
+                f"anidada y se agoto la pila; revisa el caso base de la "
+                f"recursion", linea)
         finally:
             self.memoria = memoria_anterior
             self.profundidad -= 1

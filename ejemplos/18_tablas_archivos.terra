@@ -1,0 +1,38 @@
+# Puente entre tablas, listas, matrices y archivos
+fijo datos = cargar "datos/emisiones_ejemplo.csv"
+
+# De tabla a lista: se usan todas las funciones de listas
+fijo co2 = columna(datos, "co2")
+mostrar("columnas:", nombres(datos), " filas:", num_filas(datos))
+mostrar("paises:", valores_unicos(datos, "pais"))
+mostrar("media co2:", redondear(media(co2), 2))
+mostrar("co2 > 80:", filtro(co2, funcion(x) => x > 80))
+mostrar("primera fila:", fila(datos, 0))
+
+# Unir dos tablas por una columna comun
+# (una tuberia dentro de los argumentos va entre parentesis)
+fijo energia = tabla_desde(["pais", "meta_renovable"], [["Colombia", 70], ["Chile", 80], ["Peru", 60]])
+fijo datos_2021 = datos |> filtrar donde anio == 2021
+mostrar(unir(datos_2021, energia, "pais"))
+mostrar(unir((datos |> filtrar donde anio == 2021), energia, "pais", "izquierda"))
+
+# Concatenar tablas con las mismas columnas
+fijo extra = tabla_desde(["pais", "anio", "co2", "poblacion", "energia_renovable"], [["Bolivia", 2021, 21.4, 12000000, 18.5]])
+mostrar("filas despues de concatenar:", num_filas(concatenar(datos, extra)))
+
+# De tabla a matriz: algebra lineal sobre datos reales
+fijo colombia = datos |> filtrar donde pais == "Colombia"
+fijo M = a_matriz(colombia, ["anio", "co2"])
+mostrar("matriz Colombia:", M, " dimension:", dimension(M))
+
+# Guardar con otro separador y releer
+fijo primeras = datos |> limitar 3
+guardar primeras como "salidas/emisiones_punto_y_coma.csv" con separador ";"
+mostrar(cargar "salidas/emisiones_punto_y_coma.csv" con separador ";")
+
+# Archivos de texto: un registro de lo que hizo el programa
+escribir_archivo("salidas/registro.txt", "Analisis de emisiones\n")
+agregar_archivo("salidas/registro.txt", "Paises: " + a_texto(longitud(valores_unicos(datos, "pais"))) + "\n")
+agregar_archivo("salidas/registro.txt", "Media co2: " + a_texto(redondear(media(co2), 2)) + "\n")
+mostrar("existe el registro:", existe_archivo("salidas/registro.txt"))
+mostrar(leer_lineas("salidas/registro.txt"))
